@@ -32,10 +32,13 @@ OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 # 默认目标
 # =============================
 
-all: static shared
+all: static shared test
 
 static: $(LIB_DIR)/$(STATIC_LIB)
 shared: $(LIB_DIR)/$(SHARED_LIB)
+
+test: main.cpp $(LIB_DIR)/$(STATIC_LIB)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIB_DIR)/$(STATIC_LIB)
 
 # =============================
 # 静态库
@@ -68,5 +71,6 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(LIB_DIR)
+	rm test
 
 .PHONY: all static shared clean
