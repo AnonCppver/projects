@@ -5,8 +5,9 @@ using namespace strUtil;
 
 int main()
 {
-    string s = "   ";
-    string ss=strUtil::ltrim(s);
+    string s = " 一二三 ";
+    string ss=trim(s);
+    ss=toUpper(ss);
     cout<<"s:"<<s<<endl;
     cout<<"ss:"<<ss<<endl;
 

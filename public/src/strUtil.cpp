@@ -21,6 +21,24 @@ namespace strUtil
         return result;
     }
 
+    void toLower2(std::string &str)
+    {
+        for (char &c : str)
+        {
+            c = std::tolower(c);
+        }
+        return;
+    }
+
+    void toUpper2(std::string &str)
+    {
+        for (char &c : str)
+        {
+            c = std::toupper(c);
+        }
+        return;
+    }
+
     bool startsWith(const std::string &str, const std::string &prefix)
     {
         return str.compare(0, prefix.size(), prefix) == 0;
@@ -35,7 +53,7 @@ namespace strUtil
         return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
     }
 
-    char *ltrim(char *str, const char cc)
+    char *lTrim(char *str, const char cc)
     {
         if (str == nullptr)
             return nullptr; // 如果传进来的是空地址，直接返回，防止程序崩溃。
@@ -49,7 +67,7 @@ namespace strUtil
         return str;
     }
 
-    std::string &ltrim(std::string &str, const char cc)
+    std::string &lTrim(std::string &str, const char cc)
     {
         // 查找第一个不是 cc 的字符
         auto pos = str.find_first_not_of(cc);
@@ -64,7 +82,7 @@ namespace strUtil
         return str;
     }
 
-    char *rtrim(char *str, const char cc)
+    char *rTrim(char *str, const char cc)
     {
         if (str == nullptr)
             return nullptr; // 如果传进来的是空地址，直接返回，防止程序崩溃。
@@ -87,7 +105,7 @@ namespace strUtil
         return str;
     }
 
-    std::string &rtrim(std::string &str, const char cc)
+    std::string &rTrim(std::string &str, const char cc)
     {
         auto pos = str.find_last_not_of(cc); // 从字符串的右边查找第一个不是cc的字符的位置。
 
@@ -99,16 +117,16 @@ namespace strUtil
 
     char *trim(char *str, const char cc)
     {
-        ltrim(str, cc);
-        rtrim(str, cc);
+        lTrim(str, cc);
+        rTrim(str, cc);
 
         return str;
     }
 
     std::string &trim(std::string &str, const char cc)
     {
-        ltrim(str, cc);
-        rtrim(str, cc);
+        lTrim(str, cc);
+        rTrim(str, cc);
 
         return str;
     }
@@ -122,5 +140,158 @@ namespace strUtil
             return "";
         }
         return str.substr(start, end - start + 1);
+    }
+
+    bool replaceStr(std::string &str, const std::string &str1, const std::string &str2, const bool bloop)
+    {
+        // 如果原字符串str或旧的内容str1为空，没有意义，不执行替换。
+        if ((str.length() == 0) || (str1.length() == 0))
+            return false;
+
+        // 如果bloop为true并且str2中包函了str1的内容，直接返回，因为会进入死循环，最终导致内存溢出。
+        if ((bloop == true) && (str2.find(str1) != std::string::npos))
+            return false;
+
+        int pstart = 0; // 如果bloop==false，下一次执行替换的开始位置。
+        int ppos = 0;   // 本次需要替换的位置。
+
+        while (true)
+        {
+            if (bloop == true)
+                ppos = str.find(str1); // 每次从字符串的最左边开始查找子串str1。
+            else
+                ppos = str.find(str1, pstart); // 从上次执行替换的位置后开始查找子串str1。
+
+            if (ppos == std::string::npos)
+                break; // 如果没有找到子串str1。
+
+            str.replace(ppos, str1.length(), str2); // 把str1替换成str2。
+
+            if (bloop == false)
+                pstart = ppos + str2.length(); // 下一次执行替换的开始位置往右移动。
+        }
+
+        return true;
+    }
+
+    bool replaceStr(char *str, const std::string &str1, const std::string &str2, const bool bloop)
+    {
+        if (str == nullptr)
+            return false;
+
+        std::string strtemp(str);
+
+        replaceStr(strtemp, str1, str2, bloop);
+
+        strtemp.copy(str, strtemp.length());
+        str[strtemp.length()] = 0; // string的copy函数不会给C风格字符串的结尾加0。
+
+        return true;
+    }
+
+    char *pickNumber(const std::string &src, char *dest, const bool bsigned, const bool bdot)
+    {
+        if (dest == nullptr)
+            return nullptr; // 判断空指针。
+
+        std::string strtemp = pickNumber(src, bsigned, bdot);
+        strtemp.copy(dest, strtemp.length());
+        dest[strtemp.length()] = 0; // string的copy函数不会给C风格字符串的结尾加0。
+
+        return dest;
+    }
+
+    std::string &pickNumber(const std::string &src, std::string &dest, const bool bsigned, const bool bdot)
+    {
+        // 为了支持src和dest是同一变量的情况，定义str临时变量。
+        std::string str;
+
+        for (char cc : src)
+        {
+            // 判断是否提取符号。
+            if ((bsigned == true) && ((cc == '+') || (cc == '-')))
+            {
+                str.append(1, cc);
+                continue;
+            }
+
+            // 判断是否提取小数点。
+            if ((bdot == true) && (cc == '.'))
+            {
+                str.append(1, cc);
+                continue;
+            }
+
+            // 提取数字。
+            if (isdigit(cc))
+                str.append(1, cc);
+        }
+
+        dest = str;
+
+        return dest;
+    }
+
+    std::string pickNumber(const std::string &src, const bool bsigned, const bool bdot)
+    {
+        std::string dest;
+        pickNumber(src, dest, bsigned, bdot);
+        return dest;
+    }
+
+    bool matchStr(const std::string &str, const std::string &rules)
+    {
+        // 如果匹配规则表达式的内容是空的，返回false。
+        if (rules.length() == 0)
+            return false;
+
+        // 如果如果匹配规则表达式的内容是"*"，直接返回true。
+        if (rules == "*")
+            return true;
+
+        int ii, jj;
+        int pos1, pos2;
+        Splitter spltStr, spltSubstr;
+
+        // 把字符串都转换成大写后再来比较
+        std::string filename = toUpper(str);
+        std::string matchstr = toUpper(rules);
+
+        spltStr.str2vec(matchstr, ",");
+
+        for (ii = 0; ii < spltStr.size(); ii++)
+        {
+            // 如果为空，就一定要跳过，否则就会被匹配上。
+            if (spltStr[ii].empty() == true)
+                continue;
+
+            pos1 = pos2 = 0;
+            spltSubstr.str2vec(spltStr[ii], "*");
+
+            for (jj = 0; jj < spltSubstr.size(); jj++)
+            {
+                // 如果是文件名的首部
+                if (jj == 0)
+                    if (filename.substr(0, spltSubstr[jj].length()) != spltSubstr[jj])
+                        break;
+
+                // 如果是文件名的尾部
+                if (jj == spltSubstr.size() - 1)
+                    if (filename.find(spltSubstr[jj], filename.length() - spltSubstr[jj].length()) == std::string::npos)
+                        break;
+
+                pos2 = filename.find(spltSubstr[jj], pos1);
+
+                if (pos2 == std::string::npos)
+                    break;
+
+                pos1 = pos2 + spltSubstr[jj].length();
+            }
+
+            if (jj == spltSubstr.size())
+                return true;
+        }
+
+        return false;
     }
 }
