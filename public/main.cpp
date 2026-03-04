@@ -1,7 +1,7 @@
 #include "include/strUtil.h"
 #include <iostream>
 using namespace std;
-using namespace strUtil;
+using namespace prj;
 
 int main()
 {

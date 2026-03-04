@@ -1,5 +1,5 @@
 #include "strUtil.h"
-namespace strUtil
+namespace prj
 {
     std::string toLower(const std::string &str)
     {
@@ -152,8 +152,8 @@ namespace strUtil
         if ((bloop == true) && (str2.find(str1) != std::string::npos))
             return false;
 
-        int pstart = 0; // 如果bloop==false，下一次执行替换的开始位置。
-        int ppos = 0;   // 本次需要替换的位置。
+        size_t pstart = 0; // 如果bloop==false，下一次执行替换的开始位置。
+        size_t ppos = 0;   // 本次需要替换的位置。
 
         while (true)
         {
@@ -250,7 +250,7 @@ namespace strUtil
             return true;
 
         int ii, jj;
-        int pos1, pos2;
+        size_t pos1, pos2;
         Splitter spltStr, spltSubstr;
 
         // 把字符串都转换成大写后再来比较
@@ -293,5 +293,208 @@ namespace strUtil
         }
 
         return false;
+    }
+
+    Splitter::Splitter(const std::string &buffer, const std::string &sepstr, const bool bdelspace)
+    {
+        str2vec(buffer, sepstr, bdelspace);
+    }
+
+    // 把字符串拆分到m_vecTokens容器中。
+    // buffer：待拆分的字符串。
+    // sepstr：buffer字符串中字段内容的分隔符，注意，分隔符是字符串，如","、" "、"|"、"~!~"。
+    // bdelspace：是否删除拆分后的字段内容前后的空格，true-删除；false-不删除，缺省不删除。
+    void Splitter::str2vec(const std::string &buffer, const std::string &sepstr, const bool bdelspace)
+    {
+        // 清除所有的旧数据
+        m_vecTokens.clear();
+
+        size_t pos = 0;   // 每次从buffer中查找分隔符的起始位置。
+        size_t pos1 = 0;  // 从pos的位置开始，查找下一个分隔符的位置。
+        std::string substr; // 存放每次拆分出来的子串。
+
+        while ((pos1 = buffer.find(sepstr, pos)) != std::string::npos) // 从pos的位置开始，查找下一个分隔符的位置。
+        {
+            substr = buffer.substr(pos, pos1 - pos); // 从buffer中截取子串。
+
+            if (bdelspace == true)
+                trim(substr); // 删除子串前后的空格。
+
+            m_vecTokens.push_back(std::move(substr)); // 把子串放入m_vecTokens容器中，调用string类的移动构造函数。
+
+            pos = pos1 + sepstr.length(); // 下次从buffer中查找分隔符的起始位置后移。
+        }
+
+        // 处理最后一个字段（最后一个分隔符之后的内容）。
+        substr = buffer.substr(pos);
+
+        if (bdelspace == true)
+            trim(substr);
+
+        m_vecTokens.push_back(std::move(substr));
+
+        return;
+    }
+
+    bool Splitter::getvalue(const int ii,  std::string &value, const int ilen) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        // 从xml中截取数据项的内容。
+        // 视频中是以下代码：
+        // value=m_vecTokens[ii];
+        // 改为：
+        int itmplen = m_vecTokens[ii].length();
+        if ((ilen > 0) && (ilen < itmplen))
+            itmplen = ilen;
+        value = m_vecTokens[ii].substr(0, itmplen);
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, char *value, const int len) const
+    {
+        if ((ii >= (int)m_vecTokens.size()) || (value == nullptr))
+            return false;
+
+        if (len > 0)
+            memset(value, 0, len + 1); // 调用者必须保证value的空间足够，否则这里会内存溢出。
+
+        if ((m_vecTokens[ii].length() <= (unsigned int)len) || (len == 0))
+        {
+            m_vecTokens[ii].copy(value, m_vecTokens[ii].length());
+            value[m_vecTokens[ii].length()] = 0; // string的copy函数不会给C风格字符串的结尾加0。
+        }
+        else
+        {
+            m_vecTokens[ii].copy(value, len);
+            value[len] = 0;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, int &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        try
+        {
+            value = stoi(pickNumber(m_vecTokens[ii], true)); // stoi有异常，需要处理异常。
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, unsigned int &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        try
+        {
+            value = stoi(pickNumber(m_vecTokens[ii])); // stoi有异常，需要处理异常。不提取符号 + -
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, long &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        try
+        {
+            value = stol(pickNumber(m_vecTokens[ii], true)); // stol有异常，需要处理异常。
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, unsigned long &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        try
+        {
+            value = stoul(pickNumber(m_vecTokens[ii])); // stoul有异常，需要处理异常。不提取符号 + -
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, double &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        try
+        {
+            value = stod(pickNumber(m_vecTokens[ii], true, true)); // stod有异常，需要处理异常。提取符号和小数点。
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, float &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        try
+        {
+            value = stof(pickNumber(m_vecTokens[ii], true, true)); // stof有异常，需要处理异常。提取符号和小数点。
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Splitter::getvalue(const int ii, bool &value) const
+    {
+        if (ii >= (int)m_vecTokens.size())
+            return false;
+
+        std::string str = m_vecTokens[ii];
+        toUpper2(str); // 转换为大写来判断。
+
+        if (str == "TRUE")
+            value = true;
+        else
+            value = false;
+
+        return true;
+    }
+
+    Splitter::~Splitter()
+    {
+        m_vecTokens.clear();
     }
 }

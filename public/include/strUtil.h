@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <vector>
 
-namespace strUtil
+namespace prj
 {
     // 返回新string 或者原地替换
     std::string toLower(const std::string &str);
@@ -96,6 +96,37 @@ namespace strUtil
 
         ~Splitter(); // 析构函数。
     };
+
+    // C++格式化输出函数模板。
+    template <typename... Args>
+    bool sformat(std::string &str, const char *fmt, Args... args)
+    {
+        int len = snprintf(nullptr, 0, fmt, args...); // 得到格式化输出后字符串的总长度。
+        if (len < 0)
+            return false; // 如果调用snprintf失败，返回-1。
+        if (len == 0)
+        {
+            str.clear();
+            return true;
+        } // 如果调用snprintf返回0，表示格式化输出的内容为空。
+
+        str.resize(len);
+        snprintf(&str[0], len + 1, fmt, args...);
+        return true;
+    }
+    template <typename... Args>
+    std::string sformat(const char *fmt, Args... args)
+    {
+        std::string str;
+
+        int len = snprintf(nullptr, 0, fmt, args...); // 得到格式化后字符串的长度。
+        if (len <= 0)
+            return str; // 如果调用snprintf失败，返回-1;如果调用snprintf返回0，表示格式化输出的内容为空。
+
+        str.resize(len);
+        snprintf(&str[0], len + 1, fmt, args...);
+        return str;
+    }
 }
 
 #endif // STRINGUTIL_H
