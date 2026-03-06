@@ -15,6 +15,7 @@ int main()
         if(i%100000==0)
         {
             cout<<"t:"<<t.toString()<<endl;
+            cout<<"time2str:"<<time2str((time_t)t.secondsSinceEpoch())<<endl;
         }
     }
 

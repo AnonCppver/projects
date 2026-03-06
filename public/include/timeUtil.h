@@ -42,8 +42,8 @@ namespace prj
         time_point m_start;
     };
 
-    inline std::string time2str(const time_t ttime, const std::string &fmt = "");
-    inline time_t str2time(const std::string &strtime);
+    std::string time2str(const time_t ttime, const std::string &fmt = "");
+    time_t str2time(const std::string &strtime);
 
     class Timestamp : public prj::copyable
     {

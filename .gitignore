@@ -1,2 +1,5 @@
 main.cpp
 test
+lib/*
+build/*
+*.o

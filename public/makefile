@@ -1,76 +1,34 @@
-# =============================
-# 基础配置区（可复用）
-# =============================
+CXX = g++
+CXXFLAGS = -std=c++17 -fPIC -Iinclude
 
-CXX      := g++
-AR       := ar
-ARFLAGS  := rcs
+SRC_DIR = src
+BUILD_DIR = build
+LIB_DIR = lib
 
-CXXSTD   := -std=c++17
-CXXFLAGS := -Wall -Wextra -g $(CXXSTD)
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
-SRC_DIR   := src
-INC_DIR   := include
-BUILD_DIR := build
-LIB_DIR   := lib
+.SECONDARY: $(OBJS)
 
-STATIC_LIB := libstrUtil.a libtimeUtil.a
-SHARED_LIB := libstrUtil.so libtimeUtil.so
+STATIC_LIBS = $(patsubst $(BUILD_DIR)/%.o,$(LIB_DIR)/lib%.a,$(OBJS))
+SHARED_LIBS = $(patsubst $(BUILD_DIR)/%.o,$(LIB_DIR)/lib%.so,$(OBJS))
 
-INCLUDES := -I$(INC_DIR)
-LIBS     :=
-LIB_DIRS :=
+all: $(STATIC_LIBS) $(SHARED_LIBS)
 
-# =============================
-# 自动收集源文件
-# =============================
-
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
-OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
-
-# =============================
-# 默认目标
-# =============================
-
-all: static shared test
-
-static: $(LIB_DIR)/$(STATIC_LIB)
-shared: $(LIB_DIR)/$(SHARED_LIB)
-
-test: main.cpp $(LIB_DIR)/$(STATIC_LIB)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIB_DIR)/$(STATIC_LIB)
-
-# =============================
-# 静态库
-# =============================
-
-$(LIB_DIR)/$(STATIC_LIB): $(OBJS)
-	@mkdir -p $(LIB_DIR)
-	$(AR) $(ARFLAGS) $@ $^
-
-# =============================
-# 动态库
-# =============================
-
-$(LIB_DIR)/$(SHARED_LIB): $(OBJS)
-	@mkdir -p $(LIB_DIR)
-	$(CXX) -shared -o $@ $^
-
-# =============================
-# 编译规则
-# =============================
-
+# 生成 .o
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -fPIC $(INCLUDES) -c $< -o $@
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# =============================
-# 清理
-# =============================
+# 生成静态库
+$(LIB_DIR)/lib%.a: $(BUILD_DIR)/%.o
+	mkdir -p $(LIB_DIR)
+	ar rcs $@ $<
+
+# 生成动态库
+$(LIB_DIR)/lib%.so: $(BUILD_DIR)/%.o
+	mkdir -p $(LIB_DIR)
+	$(CXX) -shared $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)
-	rm -rf $(LIB_DIR)
-	rm test
-
-.PHONY: all static shared clean
+	rm -rf $(BUILD_DIR)/*.o $(LIB_DIR)/*.a $(LIB_DIR)/*.so
