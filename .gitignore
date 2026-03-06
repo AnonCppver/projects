@@ -1,5 +1,6 @@
 main.cpp
 test
-lib/*
-build/*
+lib/*.so
+lib/*.a
+build/*.o
 *.o
