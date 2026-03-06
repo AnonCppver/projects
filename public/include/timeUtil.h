@@ -1,10 +1,10 @@
-#ifndef _TIMEUTIL_H
-#define _TIMEUTIL_H
+#ifndef _PUBLIC_TIMEUTIL_H
+#define _PUBLIC_TIMEUTIL_H
 
 #include <chrono>
-#include <ctime>
-#include <cstdint>
 #include <string>
+
+#include "copyable.h"
 
 namespace prj
 {
@@ -21,12 +21,6 @@ namespace prj
         {
         }
 
-        // 返回当前时间
-        static time_point now()
-        {
-            return clock::now();
-        }
-
         double elapsedS() const
         {
             return std::chrono::duration<double>(clock::now() - m_start).count();
@@ -39,7 +33,6 @@ namespace prj
                 .count();
         }
 
-        // 更新存储时间戳
         void reset()
         {
             m_start = clock::now();
@@ -49,49 +42,68 @@ namespace prj
         time_point m_start;
     };
 
-    class Timestamp
+    inline std::string time2str(const time_t ttime, const std::string &fmt = "");
+    inline time_t str2time(const std::string &strtime);
+
+    class Timestamp : public prj::copyable
     {
     public:
-        static const int kMicroSecondsPerSecond = 1000 * 1000;
-        
-        // 构造无效时间
-        Timestamp();
+        ///
+        /// Constucts an invalid Timestamp.
+        ///
+        Timestamp()
+            : microSecondsSinceEpoch_(0)
+        {
+        }
 
-        // 构造指定微秒时间
-        explicit Timestamp(int64_t microSecondsSinceEpoch);
+        ///
+        /// Constucts a Timestamp at specific time
+        ///
+        /// @param microSecondsSinceEpoch
+        explicit Timestamp(int64_t microSecondsSinceEpochArg)
+            : microSecondsSinceEpoch_(microSecondsSinceEpochArg)
+        {
+        }
 
-        // 获取当前时间（Unix epoch，微秒）
-        static Timestamp now();
+        void swap(Timestamp &that)
+        {
+            std::swap(microSecondsSinceEpoch_, that.microSecondsSinceEpoch_);
+        }
 
-        // 从 time_t 构造
-        static Timestamp fromUnixTime(std::time_t t);
+        // default copy/assignment/dtor are Okay
 
-        static Timestamp fromUnixTime(std::time_t t, int microseconds);
-
-        // 是否有效
-        bool valid() const;
-
-        // 返回微秒数
-        int64_t microSecondsSinceEpoch() const;
-
-        // 返回秒数
-        std::time_t secondsSinceEpoch() const;
-
-        // 返回格式化字符串
         std::string toString() const;
-
         std::string toFormattedString(bool showMicroseconds = true) const;
 
-        // 交换
-        void swap(Timestamp &other);
+        bool valid() const { return microSecondsSinceEpoch_ > 0; }
 
-        // 计算时间差（秒）
-        static double timeDifference(const Timestamp &high,
-                                     const Timestamp &low);
+        // for internal usage.
+        int64_t microSecondsSinceEpoch() const { return microSecondsSinceEpoch_; }
+        time_t secondsSinceEpoch() const
+        {
+            return static_cast<time_t>(microSecondsSinceEpoch_ / kMicroSecondsPerSecond);
+        }
 
-        // 增加时间（秒）
-        static Timestamp addTime(const Timestamp &timestamp,
-                                 double seconds);
+        ///
+        /// Get time of now.
+        ///
+        static Timestamp now();
+        static Timestamp invalid()
+        {
+            return Timestamp();
+        }
+
+        static Timestamp fromUnixTime(time_t t)
+        {
+            return fromUnixTime(t, 0);
+        }
+
+        static Timestamp fromUnixTime(time_t t, int microseconds)
+        {
+            return Timestamp(static_cast<int64_t>(t) * kMicroSecondsPerSecond + microseconds);
+        }
+
+        static const int kMicroSecondsPerSecond = 1000 * 1000;
 
     private:
         int64_t microSecondsSinceEpoch_;
@@ -102,29 +114,15 @@ namespace prj
         return lhs.microSecondsSinceEpoch() < rhs.microSecondsSinceEpoch();
     }
 
-    inline bool operator<=(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() <= rhs.microSecondsSinceEpoch();
-    }
-
     inline bool operator==(Timestamp lhs, Timestamp rhs)
     {
         return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
     }
 
-    inline bool operator!=(Timestamp lhs, Timestamp rhs)
+    inline double timeDifference(Timestamp high, Timestamp low)
     {
-        return lhs.microSecondsSinceEpoch() != rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator>(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() > rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator>=(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() >= rhs.microSecondsSinceEpoch();
+        int64_t diff = high.microSecondsSinceEpoch() - low.microSecondsSinceEpoch();
+        return static_cast<double>(diff) / Timestamp::kMicroSecondsPerSecond;
     }
 
     inline Timestamp addTime(Timestamp timestamp, double seconds)
@@ -132,6 +130,7 @@ namespace prj
         int64_t delta = static_cast<int64_t>(seconds * Timestamp::kMicroSecondsPerSecond);
         return Timestamp(timestamp.microSecondsSinceEpoch() + delta);
     }
+
 }
 
-#endif // _TIMEUTIL_H
+#endif // _PUBLIC_TIMEUTIL_H

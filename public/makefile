@@ -14,8 +14,8 @@ INC_DIR   := include
 BUILD_DIR := build
 LIB_DIR   := lib
 
-STATIC_LIB := libstrUtil.a
-SHARED_LIB := libstrUtil.so
+STATIC_LIB := libstrUtil.a libtimeUtil.a
+SHARED_LIB := libstrUtil.so libtimeUtil.so
 
 INCLUDES := -I$(INC_DIR)
 LIBS     :=

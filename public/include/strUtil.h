@@ -1,5 +1,5 @@
-#ifndef STRINGUTIL_H
-#define STRINGUTIL_H
+#ifndef _PUBLIC_STRINGUTIL_H
+#define _PUBLIC_STRINGUTIL_H
 
 #include <string>
 #include <string.h>
@@ -129,4 +129,4 @@ namespace prj
     }
 }
 
-#endif // STRINGUTIL_H
+#endif // _PUBLIC_STRINGUTIL_H

@@ -1,6 +1,8 @@
 #include "strUtil.h"
+
 namespace prj
 {
+
     std::string toLower(const std::string &str)
     {
         std::string result = str;
@@ -309,8 +311,8 @@ namespace prj
         // 清除所有的旧数据
         m_vecTokens.clear();
 
-        size_t pos = 0;   // 每次从buffer中查找分隔符的起始位置。
-        size_t pos1 = 0;  // 从pos的位置开始，查找下一个分隔符的位置。
+        size_t pos = 0;     // 每次从buffer中查找分隔符的起始位置。
+        size_t pos1 = 0;    // 从pos的位置开始，查找下一个分隔符的位置。
         std::string substr; // 存放每次拆分出来的子串。
 
         while ((pos1 = buffer.find(sepstr, pos)) != std::string::npos) // 从pos的位置开始，查找下一个分隔符的位置。
@@ -336,7 +338,7 @@ namespace prj
         return;
     }
 
-    bool Splitter::getvalue(const int ii,  std::string &value, const int ilen) const
+    bool Splitter::getvalue(const int ii, std::string &value, const int ilen) const
     {
         if (ii >= (int)m_vecTokens.size())
             return false;
