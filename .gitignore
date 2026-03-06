@@ -1,6 +1,4 @@
-main.cpp
-test
-lib/*.so
-lib/*.a
-build/*.o
-*.o
+public/test
+public/lib/*.so
+public/lib/*.a
+public/build/*.o
