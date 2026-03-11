@@ -12,7 +12,8 @@ namespace prj
     std::string time2str(time_t t, const string &fmt)
     {
         std::tm tm{};
-        localtime_r(&t, &tm);
+        //localtime_r(&t, &tm);
+        gmtime_r(&t, &tm);
 
         int y = tm.tm_year + 1900;
         int m = tm.tm_mon + 1;
