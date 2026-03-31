@@ -1,34 +1,30 @@
+# ========================
+# 基本配置
+# ========================
 CXX = g++
-CXXFLAGS = -std=c++17 -fPIC -Iinclude
+CXXFLAGS = -std=c++17 -O2 -Wall
 
-SRC_DIR = src
-BUILD_DIR = build
-LIB_DIR = lib
+# 目录
+LIB_DIR = ./lib
 
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
-OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+# 可执行文件
+TARGET = main
 
-.SECONDARY: $(OBJS)
+# ========================
+# 默认目标
+# ========================
+all: $(TARGET)
 
-STATIC_LIBS = $(patsubst $(BUILD_DIR)/%.o,$(LIB_DIR)/lib%.a,$(OBJS))
-SHARED_LIBS = $(patsubst $(BUILD_DIR)/%.o,$(LIB_DIR)/lib%.so,$(OBJS))
+# ========================
+# 编译 main
+# ========================
+$(TARGET): main.cpp
+	$(CXX) $(CXXFLAGS) $< -L$(LIB_DIR) -lbase -o $@
 
-all: $(STATIC_LIBS) $(SHARED_LIBS)
-
-# 生成 .o
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# 生成静态库
-$(LIB_DIR)/lib%.a: $(BUILD_DIR)/%.o
-	mkdir -p $(LIB_DIR)
-	ar rcs $@ $<
-
-# 生成动态库
-$(LIB_DIR)/lib%.so: $(BUILD_DIR)/%.o
-	mkdir -p $(LIB_DIR)
-	$(CXX) -shared $< -o $@
-
+# ========================
+# 清理
+# ========================
 clean:
-	rm -rf $(BUILD_DIR)/*.o $(LIB_DIR)/*.a $(LIB_DIR)/*.so
+	rm -f $(TARGET)
+
+.PHONY: all clean

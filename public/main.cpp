@@ -1,11 +1,10 @@
-#include "include/timeUtil.h"
-#include "include/strUtil.h"
-#include "include/LogStream.h"
+#include "base/timeUtil.h"
+#include "base/strUtil.h"
 
 #include <iostream>
 using namespace std;
-using namespace prj;
-// g++ -std=c++17 -g main.cpp -L./lib -lstrUtil -ltimeUtil -lLogStream -Wl,-rpath=./lib -o main
+using namespace leef;
+
 int main()
 {
 
@@ -38,10 +37,6 @@ int main()
     }
 
     cout<<"t.toFormattedString 1M times elapsedMS:"<<timer.elapsedMS()<<endl;
-
-    LogStream log;
-    log<<"hello "<<123<<" "<<123.456;
-    cout<<log.buffer().toString()<<endl;
 
     return 0;
 }

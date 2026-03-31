@@ -1,4 +1,5 @@
-public/test
 public/lib/*.so
 public/lib/*.a
-public/build/*.o
+public/base/bin/*
+public/net/bin/*
+public/main

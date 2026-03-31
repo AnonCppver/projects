@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace prj
+namespace leef
 {
     std::string time2str(time_t t, const string &fmt)
     {
@@ -18,7 +18,7 @@ namespace prj
         int y = tm.tm_year + 1900;
         int m = tm.tm_mon + 1;
 
-        char buf[32];
+        char buf[64];
 
         if (fmt.empty() || fmt == "yyyy-mm-dd hh24:mi:ss")
         {

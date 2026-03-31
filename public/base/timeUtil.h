@@ -1,12 +1,13 @@
-#ifndef _PUBLIC_TIMEUTIL_H
-#define _PUBLIC_TIMEUTIL_H
+#ifndef _LEEF_BASE_TIMEUTIL_H
+#define _LEEF_BASE_TIMEUTIL_H
 
 #include <chrono>
 #include <string>
 
 #include "copyable.h"
+#include <boost/operators.hpp>
 
-namespace prj
+namespace leef
 {
 
     class Timer
@@ -46,7 +47,7 @@ namespace prj
     void time2str(char *buf, size_t bufLen, time_t t, const std::string &fmt = "");
     time_t str2time(const std::string &strtime);
 
-    class Timestamp : public prj::copyable
+    class Timestamp : public leef::copyable
     {
     public:
         ///
@@ -110,36 +111,6 @@ namespace prj
         int64_t microSecondsSinceEpoch_;
     };
 
-    inline bool operator<(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() < rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator>(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() > rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator<=(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() <= rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator>=(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() >= rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator!=(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() != rhs.microSecondsSinceEpoch();
-    }
-
-    inline bool operator==(Timestamp lhs, Timestamp rhs)
-    {
-        return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
-    }
-
     inline double timeDifference(Timestamp high, Timestamp low)
     {
         int64_t diff = high.microSecondsSinceEpoch() - low.microSecondsSinceEpoch();
@@ -154,4 +125,4 @@ namespace prj
 
 }
 
-#endif // _PUBLIC_TIMEUTIL_H
+#endif // _LEEF_BASE_TIMEUTIL_H

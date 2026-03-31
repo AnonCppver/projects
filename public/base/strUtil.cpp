@@ -1,6 +1,6 @@
 #include "strUtil.h"
 
-namespace prj
+namespace leef
 {
 
     std::string toLower(const std::string &str)

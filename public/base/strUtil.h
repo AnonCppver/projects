@@ -1,12 +1,12 @@
-#ifndef _PUBLIC_STRINGUTIL_H
-#define _PUBLIC_STRINGUTIL_H
+#ifndef _LEEF_BASE_STRINGUTIL_H
+#define _LEEF_BASE_STRINGUTIL_H
 
 #include <string>
 #include <string.h>
 #include <ctype.h>
 #include <vector>
 
-namespace prj
+namespace leef
 {
     // 返回新string 或者原地替换
     std::string toLower(const std::string &str);
@@ -129,4 +129,4 @@ namespace prj
     }
 }
 
-#endif // _PUBLIC_STRINGUTIL_H
+#endif // _LEEF_BASE_STRINGUTIL_H

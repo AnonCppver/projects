@@ -1,22 +1,17 @@
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #include "CurrentThread.h"
 
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <stdlib.h>
 
-namespace prj
+namespace leef
 {
 namespace CurrentThread
 {
-thread_local int tl_cachedTid = 0;
-thread_local char tl_tidString[32];
-thread_local int tl_tidStringLength = 6;
-thread_local const char* tl_threadName = "unknown";
+thread_local int t_cachedTid = 0;
+thread_local char t_tidString[32];
+thread_local int t_tidStringLength = 6;
+thread_local const char* t_threadName = "unknown";
 static_assert(std::is_same<int, pid_t>::value, "pid_t should be int");
 
 std::string stackTrace(bool demangle)

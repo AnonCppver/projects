@@ -1,7 +1,7 @@
-#ifndef _PUBLIC_NONCOPYABLE_H
-#define _PUBLIC_NONCOPYABLE_H
+#ifndef _LEEF_BASE_NONCOPYABLE_H
+#define _LEEF_BASE_NONCOPYABLE_H
 
-namespace prj
+namespace leef
 {
 
     class noncopyable
@@ -15,6 +15,6 @@ namespace prj
         ~noncopyable() = default;
     };
 
-} // namespace prj
+} // namespace leef
 
-#endif // _PUBLIC_NONCOPYABLE_H
+#endif // _LEEF_BASE_NONCOPYABLE_H
