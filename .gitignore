@@ -2,4 +2,5 @@ public/lib/*.so
 public/lib/*.a
 public/base/bin/*
 public/net/bin/*
+public/test/*.o
 public/main
