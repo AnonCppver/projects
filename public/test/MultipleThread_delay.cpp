@@ -1,3 +1,5 @@
+// benchmark for consumer and producer threads, one queue, measure the delay of task execution.
+
 #include "../base/BlockingQueue.h"
 #include "../base/CountDownLatch.h"
 #include "../base/Thread.h"
