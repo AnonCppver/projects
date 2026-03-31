@@ -69,7 +69,63 @@ namespace prj
 
         return std::string(buf);
     }
+    void time2str(char *buf,size_t bufLen,time_t t, const string &fmt)
+    {
+        std::tm tm{};
+        gmtime_r(&t, &tm);
 
+        int y = tm.tm_year + 1900;
+        int m = tm.tm_mon + 1;
+
+        if (fmt.empty() || fmt == "yyyy-mm-dd hh24:mi:ss")
+        {
+            snprintf(buf, bufLen,
+                     "%04d-%02d-%02d %02d:%02d:%02d",
+                     y, m, tm.tm_mday,
+                     tm.tm_hour, tm.tm_min, tm.tm_sec);
+        }
+        else if (fmt == "yyyy-mm-dd hh24:mi")
+        {
+            snprintf(buf, bufLen,
+                     "%04d-%02d-%02d %02d:%02d",
+                     y, m, tm.tm_mday,
+                     tm.tm_hour, tm.tm_min);
+        }
+        else if (fmt == "yyyy-mm-dd")
+        {
+            snprintf(buf, bufLen,
+                     "%04d-%02d-%02d",
+                     y, m, tm.tm_mday);
+        }
+        else if (fmt == "yyyymmddhh24miss")
+        {
+            snprintf(buf, bufLen,
+                     "%04d%02d%02d%02d%02d%02d",
+                     y, m, tm.tm_mday,
+                     tm.tm_hour, tm.tm_min, tm.tm_sec);
+        }
+        else if (fmt == "yyyymmdd")
+        {
+            snprintf(buf, bufLen,
+                     "%04d%02d%02d",
+                     y, m, tm.tm_mday);
+        }
+        else if (fmt == "hh24miss")
+        {
+            snprintf(buf, bufLen,
+                     "%02d%02d%02d",
+                     tm.tm_hour, tm.tm_min, tm.tm_sec);
+        }
+        else
+        {
+            snprintf(buf, bufLen,
+                     "%04d-%02d-%02d %02d:%02d:%02d",
+                     y, m, tm.tm_mday,
+                     tm.tm_hour, tm.tm_min, tm.tm_sec);
+        }
+
+        return;
+    }
     time_t str2time(const string &strtime)
     {
         char buf[14];

@@ -179,4 +179,4 @@ namespace prj
 
 } // namespace prj
 
-#endif // MUDUO_BASE_LOGSTREAM_H
+#endif // _PUBLIC_LOGSTREAM_H

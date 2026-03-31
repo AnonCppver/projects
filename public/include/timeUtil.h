@@ -43,6 +43,7 @@ namespace prj
     };
 
     std::string time2str(const time_t ttime, const std::string &fmt = "");
+    void time2str(char *buf, size_t bufLen, time_t t, const std::string &fmt = "");
     time_t str2time(const std::string &strtime);
 
     class Timestamp : public prj::copyable
@@ -124,7 +125,7 @@ namespace prj
         return lhs.microSecondsSinceEpoch() <= rhs.microSecondsSinceEpoch();
     }
 
-    inline bool operator>= (Timestamp lhs, Timestamp rhs)
+    inline bool operator>=(Timestamp lhs, Timestamp rhs)
     {
         return lhs.microSecondsSinceEpoch() >= rhs.microSecondsSinceEpoch();
     }
