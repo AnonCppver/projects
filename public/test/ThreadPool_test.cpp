@@ -87,10 +87,10 @@ void test2()
 
 int main()
 {
-    test(0);
+    //test(0);
     //test(1);
     //test(5);
     //test(10);
     //test(50);
-    //test2();
+    test2();
 }
