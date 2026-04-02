@@ -18,15 +18,15 @@ namespace leef::file
     size_t filesize(const std::string &pathorfilename);
 
     // 获取某目录及其子目录中的文件列表的类。
-    class cdir
+    class Dir
     {
     private:
         std::vector<std::string> m_filelist; // 存放文件列表的容器（绝对路径的文件名）。
         int m_pos;                           // 从文件列表m_filelist中已读取文件的位置。
         std::string m_fmt;                   // 文件时间格式，缺省"yyyymmddhh24miss"。
 
-        cdir(const cdir &) = delete;            // 禁用拷贝构造函数。
-        cdir &operator=(const cdir &) = delete; // 禁用赋值函数。
+        Dir(const Dir &) = delete;            // 禁用拷贝构造函数。
+        Dir &operator=(const Dir &) = delete; // 禁用赋值函数。
     public:
         // /project/public/_public.h
         std::string m_dirname;   // 目录名，例如：/project/public
@@ -37,7 +37,7 @@ namespace leef::file
         std::string m_ctime;     // 文件生成的时间，即stat结构体的st_ctime成员。
         std::string m_atime;     // 文件最后一次被访问的时间，即stat结构体的st_atime成员。
 
-        cdir() : m_pos(0), m_fmt("yyyymmddhh24miss") {} // 构造函数。
+        Dir() : m_pos(0), m_fmt("yyyymmddhh24miss") {} // 构造函数。
 
         // 设置文件时间的格式，支持"yyyy-mm-dd hh24:mi:ss"和"yyyymmddhh24miss"两种，缺省是后者。
         void setfmt(const std::string &fmt);
@@ -63,7 +63,7 @@ namespace leef::file
 
         unsigned int size() { return m_filelist.size(); }
 
-        ~cdir(); // 析构函数。
+        ~Dir(); // 析构函数。
     };
 }
 

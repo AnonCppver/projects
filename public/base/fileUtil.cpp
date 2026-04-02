@@ -122,12 +122,12 @@ namespace leef::file
         return 0;
     }
 
-    void cdir::setfmt(const std::string &fmt)
+    void Dir::setfmt(const std::string &fmt)
     {
         m_fmt = fmt;
     }
 
-    bool cdir::opendir(const std::string &dirname, const std::string &rules, const int maxfiles, const bool bandchild, bool bsort)
+    bool Dir::opendir(const std::string &dirname, const std::string &rules, const int maxfiles, const bool bandchild, bool bsort)
     {
         m_filelist.clear(); // 清空文件列表容器。
         m_pos = 0;          // 从文件列表中已读取文件的位置归0。
@@ -148,7 +148,7 @@ namespace leef::file
     }
 
     // 这是一个递归函数，在opendir()中调用，cdir类的外部不需要调用它。
-    bool cdir::_opendir(const std::string &dirname, const std::string &rules, const int maxfiles, const bool bandchild)
+    bool Dir::_opendir(const std::string &dirname, const std::string &rules, const int maxfiles, const bool bandchild)
     {
         DIR *dir; // 目录指针。
 
@@ -202,7 +202,7 @@ namespace leef::file
         return true;
     }
 
-    bool cdir::readdir()
+    bool Dir::readdir()
     {
         // 如果已读完，清空容器
         if (m_pos >= static_cast<int>(m_filelist.size()))
@@ -233,7 +233,7 @@ namespace leef::file
         return true;
     }
 
-    cdir::~cdir()
+    Dir::~Dir()
     {
         m_filelist.clear();
     }
