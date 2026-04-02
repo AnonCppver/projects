@@ -2,7 +2,7 @@
 CXX := g++
 
 # 编译选项
-CXXFLAGS := -std=c++17 -g
+CXXFLAGS := -std=c++17 -O2
 
 # 库路径
 LIB_DIR := ../lib

@@ -2,7 +2,7 @@
 #include "CurrentThread.h"
 #include "Exception.h"
 #include "timeUtil.h"
-//#include "Logging.h"
+#include "Logging.h"
 
 #include <type_traits>
 
@@ -177,7 +177,7 @@ void Thread::start()
   {
     m_started = false;
     delete data; // or no delete?
-    //LOG_SYSFATAL << "Failed in pthread_create";
+    LOG_SYSFATAL << "Failed in pthread_create";
   }
   else
   {

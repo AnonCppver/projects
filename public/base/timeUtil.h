@@ -123,6 +123,28 @@ namespace leef
         return Timestamp(timestamp.microSecondsSinceEpoch() + delta);
     }
 
+    inline time_t utc2local(time_t utc)
+    {
+        // 一次调用 即使多线程
+        static const int difference = []() -> int
+        {
+            time_t now = time(nullptr);
+
+            struct tm tm_local{};
+            struct tm tm_utc{};
+
+            localtime_r(&now, &tm_local);
+            gmtime_r(&now, &tm_utc);
+
+            time_t local_sec = timegm(&tm_local);
+            time_t utc_sec = timegm(&tm_utc);
+
+            return static_cast<int>(local_sec - utc_sec);
+        }();
+
+        return utc + difference;
+    }
+
 }
 
 #endif // _LEEF_BASE_TIMEUTIL_H
