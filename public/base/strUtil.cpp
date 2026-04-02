@@ -499,4 +499,63 @@ namespace leef
     {
         m_vecTokens.clear();
     }
+
+    bool matchstr(const std::string &str, const std::string &rules)
+    {
+        // 如果匹配规则表达式的内容是空的，返回false。
+        if (rules.length() == 0)
+            return false;
+
+        // 如果如果匹配规则表达式的内容是"*"，直接返回true。
+        if (rules == "*")
+            return true;
+
+        int ii, jj;
+        int pos1, pos2;
+        Splitter splitter, subSplitter;
+
+        std::string filename = str;
+        std::string matchstr = rules;
+
+        // 把字符串都转换成大写后再来比较
+        toUpper2(filename);
+        toUpper2(matchstr);
+
+        splitter.str2vec(matchstr, ",");
+
+        for (ii = 0; ii < splitter.size(); ii++)
+        {
+            // 如果为空，就一定要跳过，否则就会被匹配上。
+            if (splitter[ii].empty() == true)
+                continue;
+
+            pos1 = pos2 = 0;
+            subSplitter.str2vec(splitter[ii], "*");
+
+            for (jj = 0; jj < subSplitter.size(); jj++)
+            {
+                // 如果是文件名的首部
+                if (jj == 0)
+                    if (filename.substr(0, subSplitter[jj].length()) != subSplitter[jj])
+                        break;
+
+                // 如果是文件名的尾部
+                if (jj == subSplitter.size() - 1)
+                    if (filename.find(subSplitter[jj], filename.length() - subSplitter[jj].length()) == std::string::npos)
+                        break;
+
+                pos2 = filename.find(subSplitter[jj], pos1);
+
+                if (pos2 == static_cast<int>(std::string::npos))
+                    break;
+
+                pos1 = pos2 + subSplitter[jj].length();
+            }
+
+            if (jj == subSplitter.size())
+                return true;
+        }
+
+        return false;
+    }
 }

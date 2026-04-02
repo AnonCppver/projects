@@ -127,6 +127,8 @@ namespace leef
         snprintf(&str[0], len + 1, fmt, args...);
         return str;
     }
+
+    bool matchstr(const std::string &str,const std::string &rules);
 }
 
 #endif // _LEEF_BASE_STRINGUTIL_H
