@@ -10,7 +10,8 @@
 namespace leef
 {
 
-    class Timer
+    class Timer : public boost::less_than_comparable<Timer>,
+                  public boost::equality_comparable<Timer>
     {
     public:
         using clock = std::chrono::steady_clock;
@@ -143,6 +144,16 @@ namespace leef
         }();
 
         return utc + difference;
+    }
+
+    inline bool operator<(Timestamp lhs, Timestamp rhs)
+    {
+        return lhs.microSecondsSinceEpoch() < rhs.microSecondsSinceEpoch();
+    }
+
+    inline bool operator==(Timestamp lhs, Timestamp rhs)
+    {
+        return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
     }
 
 }
