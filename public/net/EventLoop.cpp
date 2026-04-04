@@ -1,9 +1,9 @@
 #include "EventLoop.h"
 
 #include "../base/Logging.h"
-#include "../base/Mutex.h"
 #include "Channel.h"
 #include "Poller.h"
+#include "EPollPoller.h"
 #include "SocketsOps.h"
 #include "TimerQueue.h"
 
@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
+#include <mutex>
 
 using namespace leef;
 using namespace leef::net;
@@ -34,6 +35,7 @@ int createEventfd()
 }
 
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+// 对一个已经关闭的 socket 进行写操作，内核会发送 SIGPIPE 信号，默认会导致进程直接退出。
 class IgnoreSigPipe
 {
  public:
@@ -78,7 +80,7 @@ EventLoop::EventLoop()
   }
   wakeupChannel_->setReadCallback(
       std::bind(&EventLoop::handleRead, this));
-  // we are always reading the wakeupfd
+
   wakeupChannel_->enableReading();
 }
 
@@ -97,7 +99,7 @@ void EventLoop::loop()
   assert(!looping_);
   assertInLoopThread();
   looping_ = true;
-  quit_ = false;  // FIXME: what if someone calls quit() before loop() ?
+  quit_ = false;
   LOG_TRACE << "EventLoop " << this << " start looping";
 
   while (!quit_)

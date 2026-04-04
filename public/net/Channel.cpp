@@ -1,13 +1,13 @@
-#include "muduo/base/Logging.h"
-#include "muduo/net/Channel.h"
-#include "muduo/net/EventLoop.h"
+#include "../base/Logging.h"
+#include "Channel.h"
+#include "EventLoop.h"
 
 #include <sstream>
 
 #include <poll.h>
 
-using namespace muduo;
-using namespace muduo::net;
+using namespace leef;
+using namespace leef::net;
 
 const int Channel::kNoneEvent = 0;
 const int Channel::kReadEvent = POLLIN | POLLPRI;
@@ -50,6 +50,7 @@ void Channel::update()
 
 void Channel::remove()
 {
+  // 确保remove前没有关注任何事件
   assert(isNoneEvent());
   addedToLoop_ = false;
   loop_->removeChannel(this);
@@ -105,17 +106,17 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
   eventHandling_ = false;
 }
 
-string Channel::reventsToString() const
+std::string Channel::reventsToString() const
 {
   return eventsToString(fd_, revents_);
 }
 
-string Channel::eventsToString() const
+std::string Channel::eventsToString() const
 {
   return eventsToString(fd_, events_);
 }
 
-string Channel::eventsToString(int fd, int ev)
+std::string Channel::eventsToString(int fd, int ev)
 {
   std::ostringstream oss;
   oss << fd << ": ";
