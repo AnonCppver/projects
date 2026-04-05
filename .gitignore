@@ -1,6 +1,6 @@
-public/lib/*.so
-public/lib/*.a
-public/base/bin/*
-public/net/bin/*
-public/test/*.o
-public/test/*.log
+lib/*.so
+lib/*.a
+base/bin/*
+net/bin/*
+test/*.o
+test/*.log
