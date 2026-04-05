@@ -19,6 +19,7 @@ using namespace leef::net;
 
 namespace
 {
+// 每个线程一个 EventLoop
 thread_local EventLoop* t_loopInThisThread = 0;
 
 const int kPollTimeMs = 10000;

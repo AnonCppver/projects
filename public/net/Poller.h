@@ -24,7 +24,7 @@ class Channel;
 class Poller : noncopyable
 {
  public:
-  typedef std::vector<Channel*> ChannelList;  // 活跃 channel 列表类型
+  typedef std::vector<Channel*> ChannelList;  // 活跃 channel 列表
 
   // 构造函数
   // loop: Poller 所属的 EventLoop

@@ -130,9 +130,7 @@ class EventLoop : noncopyable
 
   typedef std::vector<Channel*> ChannelList;
 
-  // --- 成员变量 ---
-
-  bool looping_; // 是否正在 loop 中
+  std::atomic<bool> looping_; // 是否正在 loop 中
   std::atomic<bool> quit_; // 是否请求退出 loop
   bool eventHandling_; // 是否正在处理 I/O 事件
   bool callingPendingFunctors_; // 是否正在执行待处理任务队列
@@ -141,11 +139,10 @@ class EventLoop : noncopyable
   Timestamp pollReturnTime_; // poll 返回时间
   std::unique_ptr<Poller> poller_; // I/O 多路复用器
   std::unique_ptr<TimerQueue> timerQueue_; // 定时器管理器
-  int wakeupFd_; // 用于跨线程唤醒 loop 的文件描述符
+  int wakeupFd_; // mainLoop通过轮询将新连接派发给subLoop
   std::unique_ptr<Channel> wakeupChannel_; // wakeupFd 对应的 channel
   boost::any context_; // 用户自定义上下文
 
-  // 临时变量
   ChannelList activeChannels_; // poller 返回的活跃 channel 列表
   Channel* currentActiveChannel_; // 当前正在处理的 channel
 
