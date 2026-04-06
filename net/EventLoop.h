@@ -74,7 +74,7 @@ class EventLoop : noncopyable
 
   // --- 内部使用接口 ---
 
-  // 唤醒 loop（主要用于其他线程调用 runInLoop / queueInLoop 时）
+  // epoll_wait立刻返回（主要用于其他线程调用 runInLoop / queueInLoop 时）
   void wakeup();
 
   // 更新某个 channel 在 poller 中的监听事件

@@ -21,7 +21,7 @@ namespace
 {
 // 每个线程一个 EventLoop
 thread_local EventLoop* t_loopInThisThread = 0;
-
+// 超时时间
 const int kPollTimeMs = 10000;
 
 int createEventfd()
@@ -108,11 +108,7 @@ void EventLoop::loop()
     activeChannels_.clear();
     pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
     ++iteration_;
-    if (Logger::logLevel() <= Logger::TRACE)
-    {
-      printActiveChannels();
-    }
-    // TODO sort channel by priority
+
     eventHandling_ = true;
     for (Channel* channel : activeChannels_)
     {
@@ -131,9 +127,6 @@ void EventLoop::loop()
 void EventLoop::quit()
 {
   quit_ = true;
-  // There is a chance that loop() just executes while(!quit_) and exits,
-  // then EventLoop destructs, then we are accessing an invalid object.
-  // Can be fixed using mutex_ in both places.
   if (!isInLoopThread())
   {
     wakeup();
@@ -159,6 +152,8 @@ void EventLoop::queueInLoop(Functor cb)
   pendingFunctors_.push_back(std::move(cb));
   }
 
+  // 如果不是在 loop 所在线程调用，或者正在执行待处理任务队列，则唤醒 loop 以尽快执行新加入的任务
+  // callingPendingFunctors_ 不等待新事件或epoll_wait超时
   if (!isInLoopThread() || callingPendingFunctors_)
   {
     wakeup();
