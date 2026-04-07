@@ -135,6 +135,8 @@ void EventLoop::quit()
 
 void EventLoop::runInLoop(Functor cb)
 {
+  // 如果在 loop 所在线程调用 cb，则直接执行，否则放入队列唤醒 loop 执行 cb
+  // 比如main reactor会持有sub reactor的EventLoop*
   if (isInLoopThread())
   {
     cb();

@@ -127,7 +127,8 @@ void TcpConnection::sendInLoop(const StringPiece& message)
 {
   sendInLoop(message.data(), message.size());
 }
-
+// 尽可能直接写 socket；写不完就进入 outputBuffer，并注册 EPOLLOUT 等待后续写回调。
+// 写完后需要及时关闭epollout，否则会 busy loop。
 void TcpConnection::sendInLoop(const void* data, size_t len)
 {
   loop_->assertInLoopThread();
@@ -375,11 +376,14 @@ void TcpConnection::handleWrite()
       outputBuffer_.retrieve(n);
       if (outputBuffer_.readableBytes() == 0)
       {
+        // 如果不能直接写完数据，会保存在outputbuffer，设置epollout等待channel回调此函数
+        // 写完后需要及时关闭epollout，否则会 busy loop。
         channel_->disableWriting();
         if (writeCompleteCallback_)
         {
           loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
         }
+        // shutdown后，如果还在写，会等待写事件，延迟关闭
         if (state_ == kDisconnecting)
         {
           shutdownInLoop();

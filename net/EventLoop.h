@@ -137,7 +137,9 @@ class EventLoop : noncopyable
   int64_t iteration_; // loop 循环迭代计数
   const pid_t threadId_; // loop 所在线程 ID
   Timestamp pollReturnTime_; // poll 返回时间
+
   std::unique_ptr<Poller> poller_; // I/O 多路复用器
+  
   std::unique_ptr<TimerQueue> timerQueue_; // 定时器管理器
   int wakeupFd_; // mainLoop通过轮询将新连接派发给subLoop
   std::unique_ptr<Channel> wakeupChannel_; // wakeupFd 对应的 channel
