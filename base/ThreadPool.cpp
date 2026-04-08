@@ -1,6 +1,6 @@
 #include "ThreadPool.h"
 
-#include "Exception.h"
+//#include "Exception.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -125,13 +125,13 @@ void ThreadPool::runInThread()
       }
     }
   }
-  catch (const Exception& ex)
-  {
-    fprintf(stderr, "exception caught in ThreadPool %s\n", m_name.c_str());
-    fprintf(stderr, "reason: %s\n", ex.what());
-    fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
-    abort();
-  }
+  // catch (const Exception& ex)
+  // {
+  //   fprintf(stderr, "exception caught in ThreadPool %s\n", m_name.c_str());
+  //   fprintf(stderr, "reason: %s\n", ex.what());
+  //   fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
+  //   abort();
+  // }
   catch (const std::exception& ex)
   {
     fprintf(stderr, "exception caught in ThreadPool %s\n", m_name.c_str());

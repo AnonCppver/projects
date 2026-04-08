@@ -1,6 +1,6 @@
 #include "Thread.h"
 #include "CurrentThread.h"
-#include "Exception.h"
+//#include "Exception.h"
 #include "timeUtil.h"
 #include "Logging.h"
 
@@ -78,14 +78,14 @@ struct ThreadData
       func_();
       leef::CurrentThread::t_threadName = "finished";
     }
-    catch (const Exception& ex)
-    {
-      leef::CurrentThread::t_threadName = "crashed";
-      fprintf(stderr, "exception caught in Thread %s\n", name_.c_str());
-      fprintf(stderr, "reason: %s\n", ex.what());
-      fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
-      abort();
-    }
+    // catch (const Exception& ex)
+    // {
+    //   leef::CurrentThread::t_threadName = "crashed";
+    //   fprintf(stderr, "exception caught in Thread %s\n", name_.c_str());
+    //   fprintf(stderr, "reason: %s\n", ex.what());
+    //   fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
+    //   abort();
+    // }
     catch (const std::exception& ex)
     {
       leef::CurrentThread::t_threadName = "crashed";

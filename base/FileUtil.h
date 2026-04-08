@@ -39,7 +39,6 @@ class ReadSmallFile : noncopyable
   char m_buf[kBufferSize];
 };
 
-// read the file content, returns errno if error happens.
 template<typename String>
 int readFile(StringPiece filename,
              int maxSize,

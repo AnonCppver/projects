@@ -72,6 +72,7 @@ void LogFile::append_unlocked(const char* logline, int len)
       m_count = 0;
       time_t now = ::time(NULL);
       time_t thisPeriod_ = now / kRollPerSeconds_ * kRollPerSeconds_;
+      // 跨天滚动日志文件，或者超过刷新时间间隔
       if (thisPeriod_ != m_startOfPeriod)
       {
         rollFile();
@@ -94,7 +95,6 @@ bool LogFile::rollFile()
   // 滚动间隔为1秒，防止同一秒内滚动多次日志文件
   // 但是1秒的间隔可能导致日志文件过大，超过rollSize
   // 如果不检查滚动间隔，可能会在同一秒内多次写入同一文件(basename+time_second)
-  // 实际上没这么多日志要写，不是么
   if (now > m_lastRoll)
   {
     m_lastRoll = now;

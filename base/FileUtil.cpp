@@ -10,6 +10,7 @@
 
 using namespace leef;  
 
+// 设置m_buffer为缓冲区，写入m_buffer，满了就flush到文件
 FileUtil::AppendFile::AppendFile(StringPiece filename)
   : m_fp(::fopen(filename.data(), "ae")),  // 'e' for O_CLOEXEC
     m_writtenBytes(0)

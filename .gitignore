@@ -4,3 +4,4 @@ base/bin/*
 net/bin/*
 test/*.o
 test/*.log
+lrpc/*test*
