@@ -175,10 +175,10 @@ namespace leef
         append(str.data(), str.size());
       }
 
-      void append(const char * /*restrict*/ data, size_t len)
+      void append(const char *data, size_t len)
       {
         ensureWritableBytes(len);
-        std::copy(data, data + len, beginWrite());
+        memcpy(beginWrite(), data, len);
         hasWritten(len);
       }
 
@@ -394,9 +394,9 @@ namespace leef
 
       void makeSpace(size_t len)
       {
+        // 空间不够扩容;空间足够前移
         if (writableBytes() + prependableBytes() < len + kCheapPrepend)
         {
-          // 空间不够 → 扩容
           buffer_.resize(writerIndex_ + len);
         }
         else

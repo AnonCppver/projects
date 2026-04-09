@@ -2,6 +2,6 @@ lib/*.so
 lib/*.a
 base/bin/*
 net/bin/*
+lrpc/bin/*
 test/*.o
 test/*.log
-lrpc/*test*
