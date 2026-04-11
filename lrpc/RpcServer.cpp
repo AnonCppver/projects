@@ -147,34 +147,29 @@ namespace leef
                     this->onMessage(conn, buf, receiveTime);
                 });
 
-            lrpc::RpcResponse rpcResponse;
-            rpcResponse.set_err_code(0);
-            rpcResponse.set_err_msg("success");
-            rpcResponse.SerializeToString(&m_successResponse);
-
-            LOG_INFO << "Starting RPC Server on port " << port<< " with " << m_threadNum << " threads.";
+            LOG_INFO << "Starting RPC Server on port " << port << " with " << m_threadNum << " threads.";
             m_tcpServerPtr->start();
             m_eventLoopPtr->loop();
         }
         // response响应格式
-        // [header_size][args_size][msg_proto[err_code,err_msg]][msg_args]
+        // [size][msg_proto[err_code,err_msg,result]]
         void RpcServer::sendResponse(const leef::net::TcpConnectionPtr &conn, google::protobuf::Message *response)
         {
-            std::string strResponse;
-            size_t args_size = response->ByteSizeLong();
-            // 长度协议
-            int64_t msgLen = (static_cast<int64_t>(m_successResponse.size()) << 32) | args_size;
-            int64_t netLen = leef::net::sockets::hostToNetwork64(msgLen);
-            // data->strResponse->fd/fd+buffer->fd
-            strResponse.resize(sizeof(int64_t) + m_successResponse.size() + args_size);
-            char *ptr = strResponse.data();
-            memcpy(ptr, &netLen, sizeof(int64_t));
-            ptr += sizeof(int64_t);
-            memcpy(ptr, m_successResponse.data(), m_successResponse.size());
-            ptr += m_successResponse.size();
-            response->SerializeToArray(ptr, args_size);
 
-            conn->send(strResponse);
+            size_t bodySize = response->ByteSizeLong();
+
+            std::string buffer;
+            buffer.resize(sizeof(int32_t) + bodySize);
+
+            char *ptr = buffer.data();
+
+            int32_t len = static_cast<int32_t>(bodySize);
+            int32_t netLen = leef::net::sockets::hostToNetwork32(len);
+            memcpy(ptr, &netLen, sizeof(int32_t));
+
+            response->SerializeToArray(ptr + sizeof(int32_t), bodySize);
+
+            conn->send(buffer);
         }
     }
 }

@@ -38,7 +38,6 @@ namespace leef
             std::unique_ptr<leef::net::EventLoop> m_eventLoopPtr;
             // key: serviceName, value: ServiceInfo
             std::unordered_map<std::string, ServiceInfo> m_serviceMap;
-            std::string m_successResponse=""; // 缓存调用成功的响应
             int m_threadNum = 0; // 默认线程数
         };
     } // namespace rpc
