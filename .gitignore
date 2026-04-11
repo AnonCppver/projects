@@ -3,5 +3,6 @@ lib/*.a
 base/bin/*
 net/bin/*
 lrpc/bin/*
+lrpc/test/*
 test/*.o
 test/*.log

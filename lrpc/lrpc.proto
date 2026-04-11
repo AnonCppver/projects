@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package lrpc;
+
+message RpcRequest {
+  bytes service = 1;   // 服务名
+  bytes method  = 2;   // 方法名
+}
+
+message RpcResponse {
+  int32  err_code = 1;   // 错误码（0表示成功）
+  bytes err_msg  = 2;   // 错误信息
+  bytes  response   = 3;   // 序列化后的返回值
+}

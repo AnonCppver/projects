@@ -22,7 +22,7 @@ class EventLoopThreadPool;   // IO 线程池（多 Reactor）
 // 2. 管理所有 TcpConnection
 // 3. 分发连接到 IO 线程（EventLoopThreadPool）
 // 4. 提供回调接口（连接、消息、写完成）
-class TcpServer : noncopyable   // 禁止拷贝（资源唯一拥有）
+class TcpServer : noncopyable 
 {
  public:
   // 线程初始化回调：每个 IO 线程启动时执行

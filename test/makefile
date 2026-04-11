@@ -11,7 +11,7 @@ LIB_DIR := ../lib
 LDFLAGS := -L$(LIB_DIR) -Wl,-rpath=$(LIB_DIR)
 
 # 库
-LIBS := -llrpc -lnet -lpthread -lbase 
+LIBS := -llrpc -lnet -lbase -lpthread 
 
 # 源文件
 SRCS := $(wildcard *.cpp)
