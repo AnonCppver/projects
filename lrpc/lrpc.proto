@@ -3,7 +3,33 @@ syntax = "proto3";
 
 package lrpc;
 
-message RpcRequest {
-  bytes service = 1;   // 服务名
-  bytes method  = 2;   // 方法名
+enum MessageType
+{
+  REQUEST = 0;
+  RESPONSE = 1;
+}
+
+enum ErrorCode
+{
+  SUCCESS = 0;
+  NO_SERVICE = 1;
+  NO_METHOD = 2;
+  INVALID_REQUEST = 3;
+  INVALID_RESPONSE = 4;
+  TIMEOUT = 5;
+  PROTO_ERROR = 6;
+}
+
+message RpcMessage
+{
+  MessageType type = 1;
+  int64 id = 2;
+
+  string service = 3;
+  string method = 4;
+
+  bytes request = 5;
+  bytes response = 6;
+
+  ErrorCode error = 7;
 }

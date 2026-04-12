@@ -1,26 +1,36 @@
 # ========================
-# 基本配置
+# 编译器配置
 # ========================
 CXX = g++
-CXXFLAGS = -std=c++17 -O2 -fPIC -Wall
+CXXFLAGS = -std=c++17 -O2 -Wall -fPIC
 
-# 目录
+# ========================
+# 路径
+# ========================
 SRC_DIR = .
 OBJ_DIR = ./bin
 LIB_DIR = ../lib
 
+# ========================
 # 库名
+# ========================
 LIB_NAME = lrpc
 
 # ========================
-# 文件列表
+# 源文件
 # ========================
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) \
+        $(wildcard $(SRC_DIR)/*.cc)
 
-# 把 .cpp → bin/*.o
-OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
+# ========================
+# 目标文件列表
+# ========================
+OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter %.cpp,$(SRCS))) \
+        $(patsubst $(SRC_DIR)/%.cc,$(OBJ_DIR)/%.o,$(filter %.cc,$(SRCS)))
 
-# 输出文件
+# ========================
+# 输出库
+# ========================
 STATIC_LIB = $(LIB_DIR)/lib$(LIB_NAME).a
 SHARED_LIB = $(LIB_DIR)/lib$(LIB_NAME).so
 
@@ -30,9 +40,16 @@ SHARED_LIB = $(LIB_DIR)/lib$(LIB_NAME).so
 all: $(STATIC_LIB) $(SHARED_LIB)
 
 # ========================
-# 编译 .o（关键修改点）
+# 编译 cpp -> o
 # ========================
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# ========================
+# 编译 cc -> o
+# ========================
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

@@ -1,12 +1,7 @@
 #include "RpcServer.h"
-#include "RpcConfig.h"
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
-
-#include "../net/TcpConnection.h"
-
-#include "lrpc.pb.h"
 
 using namespace std::placeholders;
 
@@ -14,6 +9,23 @@ namespace leef
 {
     namespace rpc
     {
+        class BufCleaner
+        {
+        public:
+            BufCleaner(leef::net::Buffer *buf, size_t len) : m_buf(buf), m_len(len) {}
+            ~BufCleaner()
+            {
+                if (m_buf)
+                {
+                    m_buf->retrieve(sizeof(int32_t) + m_len);
+                }
+            }
+
+        private:
+            leef::net::Buffer *m_buf;
+            size_t m_len;
+        };
+
         void RpcServer::setThreadNum(int numThreads)
         {
             m_threadNum = std::max(m_threadNum, numThreads);
@@ -44,45 +56,51 @@ namespace leef
             }
         }
 
-        // string_view style 处理，避免拷贝
-        // 消息格式：[header_size][args_size][msg_proto[service,method]][msg_args]
-        // 注意: size需要考虑主机字节序与网络字节序的转换
+        // 使用协议 size(4字节) + RpcMessage 来解析请求 多一次内存拷贝，但更清晰且易于调试，也更容易扩展协议
+        // header_size args_size protobuf args
         void RpcServer::onMessage(const leef::net::TcpConnectionPtr &conn, leef::net::Buffer *buf, leef::Timestamp receiveTime)
         {
             while (true)
             {
+                std::string tcpInfo = conn->getTcpInfoString();
                 // 报文长度解析
-                if (buf->readableBytes() < 8)
+                if (buf->readableBytes() < 4)
                 {
                     return; // 不够读取消息长度
                 }
-                int64_t msgLen = buf->peekInt64();
-                int32_t header_size = msgLen >> 32;
-                int32_t args_size = msgLen & 0xFFFFFFFF;
-                if (header_size + args_size > 4 * 1024) // 限制消息大小，防止恶意攻击
+                int32_t msgLen = buf->peekInt32();
+                if (msgLen > 4 * 1024 * 1024) // 限制消息大小，防止恶意攻击
                 {
-                    LOG_ERROR << "Message size too large: " << header_size + args_size;
+                    double mib = static_cast<double>(msgLen) / (1024.0 * 1024.0);
+                    double mib2 = static_cast<long long>(mib * 100 + 0.5) / 100.0;
+
+                    std::string tcpInfo = conn->getTcpInfoString();
+                    LOG_ERROR << tcpInfo << " Message size too large: " << mib2 << " MiB";
                     conn->shutdown();
                     return;
                 }
-                if (buf->readableBytes() < sizeof(int64_t) + header_size + args_size)
+                if (buf->readableBytes() < sizeof(int32_t) + msgLen)
                 {
                     return; // 不够读取消息内容
                 }
+                BufCleaner cleaner(buf, msgLen); // 确保函数退出时正确移动读指针
                 // 请求头解析
-                lrpc::RpcRequest rpcRequest;
-                if (!rpcRequest.ParseFromArray(buf->peek() + sizeof(int64_t), header_size))
+                lrpc::RpcMessage rpcMessage;
+                if (!rpcMessage.ParseFromArray(buf->peek() + sizeof(int32_t), msgLen))
                 {
-                    LOG_ERROR << "Failed to parse RpcRequest";
+                    sendError(conn, 0, lrpc::PROTO_ERROR);
+                    LOG_ERROR << "Failed to parse RpcMessage";
                     return;
                 }
-                const std::string &strService = rpcRequest.service();
-                const std::string &strMethod = rpcRequest.method();
+                const std::string &strService = rpcMessage.service();
+                const std::string &strMethod = rpcMessage.method();
+                int64_t id = rpcMessage.id();
 
                 auto it = m_serviceMap.find(strService);
                 if (it == m_serviceMap.end())
                 {
                     // 没有找到对应的服务
+                    sendError(conn, id, lrpc::NO_SERVICE);
                     return;
                 }
                 const ServiceInfo &serviceInfo = it->second;
@@ -90,47 +108,49 @@ namespace leef
                 if (mit == serviceInfo.m_methodMap.end())
                 {
                     // 没有找到对应的方法
+                    sendError(conn, id, lrpc::NO_METHOD);
                     return;
                 }
                 const google::protobuf::MethodDescriptor *methodDesc = mit->second;
-                LOG_INFO << "Received request for service: " << strService << ", method: " << strMethod;
+                LOG_INFO << "Received request for service: " << strService << ", method: " << strMethod << ", message ID: " << id;
 
                 google::protobuf::Service *servicePtr = serviceInfo.m_service;
-                auto request = std::unique_ptr<google::protobuf::Message>(servicePtr->GetRequestPrototype(methodDesc).New());
-                auto response = std::unique_ptr<google::protobuf::Message>(servicePtr->GetResponsePrototype(methodDesc).New());
+                auto request = std::shared_ptr<google::protobuf::Message>(servicePtr->GetRequestPrototype(methodDesc).New());
+                auto response = std::shared_ptr<google::protobuf::Message>(servicePtr->GetResponsePrototype(methodDesc).New());
 
-                // 绑定closure回调，调用service的CallMethod时会执行这个回调来发送响应
-                google::protobuf::Closure *done =
-                    google::protobuf::NewCallback<RpcServer, const leef::net::TcpConnectionPtr &, google::protobuf::Message *>(this, &RpcServer::sendResponse, conn, response.get());
-
-                if (!request->ParseFromArray(buf->peek() + sizeof(int64_t) + header_size, args_size))
+                if (rpcMessage.type() != lrpc::REQUEST)
                 {
-                    LOG_ERROR << "Failed to parse request for service: " << strService << ", method: " << strMethod;
+                    sendError(conn, id, lrpc::INVALID_REQUEST);
                     return;
                 }
-                servicePtr->CallMethod(methodDesc, nullptr, request.get(), response.get(), done);
 
-                buf->retrieve(sizeof(int64_t) + header_size + args_size); // 处理完消息后，移动读指针
+                // 绑定closure回调，调用service的CallMethod时会执行这个回调来发送成功响应
+                // 值捕获request和response，防止在sendback前释放
+                google::protobuf::Closure *done =
+                    new LambdaClosure([this, conn, request, response, id]()
+                                      { this->sendResponse(conn, response, id); });
+                // google::protobuf::Closure *done =
+                //     google::protobuf::NewCallback
+                //     <RpcServer, const leef::net::TcpConnectionPtr &, google::protobuf::Message *, int64_t>
+                //     (this, &RpcServer::sendResponse, conn, response.get(), id);
+
+                // 请求参数解析
+                const std::string &reqData = rpcMessage.request();
+
+                if (!request->ParseFromArray(reqData.data(), reqData.size()))
+                {
+                    sendError(conn, id, lrpc::INVALID_REQUEST);
+                    return;
+                }
+
+                servicePtr->CallMethod(methodDesc, nullptr, request.get(), response.get(), done);
             }
         }
 
         void RpcServer::run()
         {
-            RpcConfig config;
-            if (!config.load("./rpc.cfg"))
-            {
-                LOG_ERROR << "Failed to load RPC configuration";
-                exit(1);
-            }
-            std::string portStr = config.getValue("port");
-            std::string nameStr = config.getValue("name");
-            if (portStr.empty())
-                portStr = "6000";
-            if (nameStr.empty())
-                nameStr = "RpcServer";
-            int port = std::stoi(portStr);
             m_eventLoopPtr = std::make_unique<leef::net::EventLoop>();
-            m_tcpServerPtr = std::make_unique<leef::net::TcpServer>(m_eventLoopPtr.get(), leef::net::InetAddress(port), nameStr, leef::net::TcpServer::kReusePort);
+            m_tcpServerPtr = std::make_unique<leef::net::TcpServer>(m_eventLoopPtr.get(), leef::net::InetAddress(m_port), m_name, leef::net::TcpServer::kReusePort);
             m_tcpServerPtr->setThreadNum(m_threadNum);
 
             m_tcpServerPtr->setConnectionCallback(
@@ -147,27 +167,63 @@ namespace leef
                     this->onMessage(conn, buf, receiveTime);
                 });
 
-            LOG_INFO << "Starting RPC Server on port " << port << " with " << m_threadNum << " threads.";
+            LOG_INFO << "Starting RPC Server on port " << m_port << " with " << m_threadNum << " threads.";
             m_tcpServerPtr->start();
             m_eventLoopPtr->loop();
         }
-        // response响应格式
-        // [size][msg_proto[err_code,err_msg,result]]
-        void RpcServer::sendResponse(const leef::net::TcpConnectionPtr &conn, google::protobuf::Message *response)
-        {
 
-            size_t bodySize = response->ByteSizeLong();
+        void RpcServer::sendResponse(
+            const leef::net::TcpConnectionPtr &conn,
+            const std::shared_ptr<google::protobuf::Message> &response,
+            int64_t id)
+        {
+            lrpc::RpcMessage rpcMsg;
+            rpcMsg.set_type(lrpc::RESPONSE);
+            rpcMsg.set_id(id);
+            rpcMsg.set_error(lrpc::SUCCESS);
+
+            std::string respData;
+            if (!response->SerializeToString(&respData))
+            {
+                LOG_ERROR << "Failed to serialize response";
+                rpcMsg.set_error(lrpc::INVALID_RESPONSE);
+            }
+            else
+            {
+                rpcMsg.set_response(respData);
+            }
+
+            // 3. 序列化 RpcMessage
+            int32_t len = static_cast<int32_t>(rpcMsg.ByteSizeLong());
+            int32_t netLen = leef::net::sockets::hostToNetwork32(len);
 
             std::string buffer;
-            buffer.resize(sizeof(int32_t) + bodySize);
+            buffer.resize(sizeof(int32_t) + len);
 
-            char *ptr = buffer.data();
+            memcpy(buffer.data(), &netLen, sizeof(int32_t));
 
-            int32_t len = static_cast<int32_t>(bodySize);
+            rpcMsg.SerializeToArray(buffer.data() + sizeof(int32_t), len);
+
+            conn->send(buffer);
+        }
+
+        void RpcServer::sendError(const leef::net::TcpConnectionPtr &conn,
+                                  int64_t id,
+                                  lrpc::ErrorCode errorCode)
+        {
+            lrpc::RpcMessage errMsg;
+            errMsg.set_type(lrpc::RESPONSE);
+            errMsg.set_id(id);
+            errMsg.set_error(errorCode);
+
+            int32_t len = errMsg.ByteSizeLong();
             int32_t netLen = leef::net::sockets::hostToNetwork32(len);
-            memcpy(ptr, &netLen, sizeof(int32_t));
 
-            response->SerializeToArray(ptr + sizeof(int32_t), bodySize);
+            std::string buffer;
+            buffer.resize(sizeof(int32_t) + len);
+
+            memcpy(buffer.data(), &netLen, sizeof(int32_t));
+            errMsg.SerializeToArray(buffer.data() + sizeof(int32_t), len);
 
             conn->send(buffer);
         }
