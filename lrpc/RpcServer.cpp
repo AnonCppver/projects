@@ -125,9 +125,8 @@ namespace leef
                 }
 
                 // 绑定closure回调，调用service的CallMethod时会执行这个回调来发送成功响应
-                // 值捕获request和response，防止在sendback前释放
                 google::protobuf::Closure *done =
-                    new LambdaClosure([this, conn, request, response, id]()
+                    new LambdaClosure([this, conn, response, id]()
                                       { this->sendResponse(conn, response, id); });
                 // google::protobuf::Closure *done =
                 //     google::protobuf::NewCallback
