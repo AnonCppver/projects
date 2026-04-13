@@ -68,7 +68,7 @@ namespace leef
                 {
                     return; // 不够读取消息长度
                 }
-                int32_t msgLen = buf->peekInt32();
+                uint32_t msgLen = buf->peekInt32();
                 if (msgLen > 4 * 1024 * 1024) // 限制消息大小，防止恶意攻击
                 {
                     double mib = static_cast<double>(msgLen) / (1024.0 * 1024.0);
@@ -79,14 +79,14 @@ namespace leef
                     conn->shutdown();
                     return;
                 }
-                if (buf->readableBytes() < sizeof(int32_t) + msgLen)
+                if (buf->readableBytes() < sizeof(uint32_t) + msgLen)
                 {
                     return; // 不够读取消息内容
                 }
                 BufCleaner cleaner(buf, msgLen); // 确保函数退出时正确移动读指针
                 // 请求头解析
                 lrpc::RpcMessage rpcMessage;
-                if (!rpcMessage.ParseFromArray(buf->peek() + sizeof(int32_t), msgLen))
+                if (!rpcMessage.ParseFromArray(buf->peek() + sizeof(uint32_t), msgLen))
                 {
                     sendError(conn, 0, lrpc::PROTO_ERROR);
                     LOG_ERROR << "Failed to parse RpcMessage";
@@ -193,15 +193,15 @@ namespace leef
             }
 
             // 3. 序列化 RpcMessage
-            int32_t len = static_cast<int32_t>(rpcMsg.ByteSizeLong());
-            int32_t netLen = leef::net::sockets::hostToNetwork32(len);
+            uint32_t len = static_cast<uint32_t>(rpcMsg.ByteSizeLong());
+            uint32_t netLen = leef::net::sockets::hostToNetwork32(len);
 
             std::string buffer;
-            buffer.resize(sizeof(int32_t) + len);
+            buffer.resize(sizeof(uint32_t) + len);
 
-            memcpy(buffer.data(), &netLen, sizeof(int32_t));
+            memcpy(buffer.data(), &netLen, sizeof(uint32_t));
 
-            rpcMsg.SerializeToArray(buffer.data() + sizeof(int32_t), len);
+            rpcMsg.SerializeToArray(buffer.data() + sizeof(uint32_t), len);
 
             conn->send(buffer);
         }
@@ -215,14 +215,14 @@ namespace leef
             errMsg.set_id(id);
             errMsg.set_error(errorCode);
 
-            int32_t len = errMsg.ByteSizeLong();
-            int32_t netLen = leef::net::sockets::hostToNetwork32(len);
+            uint32_t len = errMsg.ByteSizeLong();
+            uint32_t netLen = leef::net::sockets::hostToNetwork32(len);
 
             std::string buffer;
-            buffer.resize(sizeof(int32_t) + len);
+            buffer.resize(sizeof(uint32_t) + len);
 
-            memcpy(buffer.data(), &netLen, sizeof(int32_t));
-            errMsg.SerializeToArray(buffer.data() + sizeof(int32_t), len);
+            memcpy(buffer.data(), &netLen, sizeof(uint32_t));
+            errMsg.SerializeToArray(buffer.data() + sizeof(uint32_t), len);
 
             conn->send(buffer);
         }
